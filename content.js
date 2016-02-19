@@ -1,52 +1,171 @@
-chrome.runtime.onMessage.addListener(
-  function(request, sender, sendResponse) {
-    if( request.message === "clicked_browser_action" ) {
-      //var firstHref = $("a[href^='http']").eq(0).attr("href");
+function Burndown(data) {
+  // DOM objects
+  this.$wrap = $('#ghx-chart-wrap');
+  this.$view = $('#ghx-chart-view');
+  this.$canvasBase    = this.$view.find('canvas.base');
+  this.$canvasOverlay = this.$view.find('canvas.overlay');
 
-      //console.log(firstHref);
-      //console.log("dddd");
-      var $line_cache;
-		var $current_line;
+  // JIRA objects
+  this.data = data;
 
-		$("#ghx-chart-view").click(function(e){ 
-			$line_cache = $current_line;
-			$current_line=[];
-		});
+  this.gridLines = {};
+  this.gridLines.up = null;
+  this.gridLines.down = null;
+  this.nextGridLine = 'up';
+}
 
-		$("#ghx-chart-view").mousemove(function(e){
-			var parentOffset = $(this).parent().offset(); 
-			var relX = e.pageX - parentOffset.left;
-			var relY = e.pageY - parentOffset.top;
+Burndown.prototype.init = function() {
+  var co = this.$canvasOverlay;
 
-			$("#line_reference").remove("");
-			$("#valueHour").remove("");
+  // handlers
+  co.click(this.handleClick.bind(this));
+  co.mousemove(this.handleMouseMove.bind(this));
+};
 
-			var px_fator1 = $($(".yAxis.y1Axis .tickLabel")[0]).attr("style").match("top:(.*)px;r")[1];
-			var px_fator2 = $($(".yAxis.y1Axis .tickLabel")[1]).attr("style").match("top:(.*)px;r")[1];
-			var h_fator1 = $($(".yAxis.y1Axis .tickLabel")[0]).text().replace(/[^0-9]/g, '');
-			var h_fator2 = $($(".yAxis.y1Axis .tickLabel")[1]).text().replace(/[^0-9]/g, '');
-			var fator_reverse = $(".yAxis.y1Axis .tickLabel").last().text().replace(/[^0-9]/g, '');
+Burndown.prototype.handleClick = function(e) {
+  this.addGridLine();
+};
 
-			var px_fator = (px_fator1-px_fator2);
-			var h_fator = (h_fator2-h_fator1);
-			var hora_result = ((relY)*h_fator)/(px_fator);
-			var fator_alinhamento = 7;
+Burndown.prototype.handleMouseMove = function(e) {
+  var co = this.$canvasOverlay;
+  var vw = this.$view;
+  var pos = vw.offset();
 
-			var result = (((hora_result-fator_reverse+fator_alinhamento)*-1)).toFixed(2);
+  this.bounds = {
+    x: pos.left + 25,
+    y: pos.top,
+    width: co.width() - 25,
+    height: co.height() - 25
+  };
 
-			var lineReference = $('<span id="line_reference" style="border: 1px solid #00FF08;width: 98%;height: 0px;position: absolute;top: '+(relY+8.5)+'px;left: 27px;"></span>');
-			var valueHour = $('<span id="valueHour" style="top: '+(relY+8.5)+'px;z-index:9999;background-color: whitesmoke;color:red;width: 60px;height: 20px;position: absolute;left: -70px;padding: 4px;border-radius: 5px;text-align: center;border: 1px solid silver;"><b>'+result+'h</b></span>');
+  var x = e.pageX - this.bounds.x;
+  var y = e.pageY - this.bounds.y;
 
-			$current_line = {lineReference: lineReference,valueHour:valueHour};
-		   
-		    $("#ghx-chart-view").append(lineReference);
-			$("#ghx-chart-view").append(valueHour);
-
-		    $("#ghx-chart-view").append($line_cache['lineReference']);
-			$("#ghx-chart-view").append($line_cache['valueHour']);
-		});
-    }
+  if (x < 0 || x > this.bounds.width ||
+      y < 0 || y > this.bounds.height) {
+    return;
   }
 
+  this.mousePosition = {
+    x: e.pageX - this.bounds.x,
+    y: e.pageY - this.bounds.y
+  };
+};
 
+Burndown.prototype.getTimeRange = function () {
+  var yAxis    = this.data.yAxisData;
+  var tickSize = yAxis.tickSize;
+
+  var timeSpent = this.data.timelineData.maxValues.timeSpent;
+  var timeRange = (1 + Math.ceil(timeSpent / tickSize)) * tickSize;
+
+  return timeRange / (60 * 60);
+};
+
+Burndown.prototype.getCurrentTime = function () {
+  var estimateTime = this.bounds.height - this.mousePosition.y;
+  var percentage   = estimateTime / this.bounds.height;
+  var range = this.getTimeRange();
+
+  return percentage * range;
+}
+
+Burndown.prototype.addGridLine = function () {
+  var currentPosition = this.mousePosition.y;
+  var currentTime = this.getCurrentTime();
+
+  this.__clearOverlay();
+  this.gridLines[this.nextGridLine] = {
+    time: currentTime,
+    position: currentPosition
+  };
+
+  if (this.gridLines.up)   this.__drawLine(this.gridLines.up);
+  if (this.gridLines.down) this.__drawLine(this.gridLines.down);
+
+  this.nextGridLine = this.nextGridLine == 'up' ? 'down' : 'up';
+};
+
+Burndown.prototype.__clearOverlay = function() {
+  var ctx = this.$canvasOverlay[0].getContext('2d');
+  ctx.clearRect(0, 0, this.$canvasOverlay.width(), this.$canvasOverlay.height());
+};
+
+Burndown.prototype.__drawLine = function(gridLine) {
+  var time = gridLine.time;
+  time = Math.floor(time) + 'h';
+
+  var ctx = this.$canvasOverlay[0].getContext('2d');
+
+  ctx.beginPath();
+  ctx.moveTo(25, gridLine.position);
+  ctx.lineTo(this.bounds.width+25, gridLine.position);
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#ff0000';
+  ctx.stroke();
+  ctx.closePath();
+
+  ctx.font = '12px Arial';
+  ctx.fillStyle = 'red';
+  ctx.fillText(time, 0, gridLine.position);
+};
+
+function GHInjector () {
+  this.script = document.createElement('script');
+  this.script.textContent = '(' + this.__detour + ')();';
+
+  this.data = null;
+}
+
+GHInjector.prototype.init = function () {
+  (document.head || document.documentElement).appendChild(this.script);
+  this.script.parentNode.removeChild(this.script);
+
+  var _this = this;
+  window.addEventListener('GH_Objects', function(e) {
+    _this.data = JSON.parse(e.detail);
+  });
+};
+
+GHInjector.prototype.__detour = function() {
+  var check;
+  var event;
+
+  var model = GH.BurndownChartModel;
+  // Original function reference
+  var original = model.setRawData;
+
+  // Set trampoline
+  var trampoline = function(a) {
+    // Call original function
+    original.call(this, a);
+
+    // Get data from model
+    check = JSON.stringify(this);
+
+    event = new CustomEvent('GH_Objects', {detail: check});
+    window.dispatchEvent(event);
+  };
+
+  trampoline.$original = original;
+  model.setRawData = trampoline;
+};
+
+// Inject script into page
+var injector = new GHInjector();
+injector.init();
+
+var burndown;
+
+chrome.runtime.onMessage.addListener(
+  function(request, sender, sendResponse) {
+    if (request.message !== 'clicked_browser_action') {
+      return;
+    }
+
+    if (!burndown) {
+      burndown = new Burndown(injector.data);
+      burndown.init();
+    }
+  }
 );
