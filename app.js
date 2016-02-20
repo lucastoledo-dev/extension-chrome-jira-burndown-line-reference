@@ -6601,38 +6601,6 @@ $__System.register('1b', ['12', '13', '14', '15', '16', '1c', '1a'], function (_
             this.__values.reference.element.show();
           }
         }, {
-          key: '_createLine',
-          value: function _createLine(id, orientation) {
-            var hide = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
-
-            var line = new Line(id, orientation);
-            line.element.appendTo(this.view);
-            this._updateLineSize(line);
-
-            line.setOffset(LINE_POSITION_OFFSET.x, LINE_POSITION_OFFSET.y);
-
-            if (hide) {
-              line.element.hide();
-            }
-
-            return line;
-          }
-        }, {
-          key: '_createValueHour',
-          value: function _createValueHour(id) {
-            var hide = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
-
-            var valueHour = new ValueHour(id);
-            valueHour.element.appendTo(this.view);
-            this._updateValueHour(valueHour, 0);
-
-            if (hide) {
-              valueHour.element.hide();
-            }
-
-            return valueHour;
-          }
-        }, {
           key: '_initElements',
           value: function _initElements() {
             this.__lines.horizontal = this._createLine('horizontal', ORIENTATION.HORIZONTAL);
@@ -6682,6 +6650,38 @@ $__System.register('1b', ['12', '13', '14', '15', '16', '1c', '1a'], function (_
             this._updateLineSize(this.__lines.horizontal);
             this._updateLineSize(this.__lines.vertical);
             this._updateLineSize(this.__lines.reference);
+          }
+        }, {
+          key: '_createLine',
+          value: function _createLine(id, orientation) {
+            var hide = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
+
+            var line = new Line(id, orientation);
+            line.element.insertAfter(this.canvas);
+            this._updateLineSize(line);
+
+            line.setOffset(LINE_POSITION_OFFSET.x, LINE_POSITION_OFFSET.y);
+
+            if (hide) {
+              line.element.hide();
+            }
+
+            return line;
+          }
+        }, {
+          key: '_createValueHour',
+          value: function _createValueHour(id) {
+            var hide = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+
+            var valueHour = new ValueHour(id);
+            valueHour.element.insertAfter(this.canvas);
+            this._updateValueHour(valueHour, 0);
+
+            if (hide) {
+              valueHour.element.hide();
+            }
+
+            return valueHour;
           }
         }, {
           key: '_updateLinePosition',
