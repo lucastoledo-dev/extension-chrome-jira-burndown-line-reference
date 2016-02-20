@@ -6577,8 +6577,10 @@ $__System.register('1b', ['12', '13', '14', '15', '16', '1c', '1a'], function (_
           key: 'getMaxTick',
           value: function getMaxTick() {
             var tickSize = this.__data.yAxisData.tickSize;
+            var estimate = this.__data.timelineData.maxValues.estimate;
             var timeSpent = this.__data.timelineData.maxValues.timeSpent;
-            var timeRange = Math.ceil(timeSpent / tickSize) * tickSize;
+            var maxValue = Math.max(estimate, timeSpent);
+            var timeRange = Math.ceil(maxValue / tickSize) * tickSize;
 
             return timeRange / 3600;
           }
@@ -13782,6 +13784,7 @@ $__System.register('1', ['12', '1d', '2f'], function (_export) {
         callback: function callback(data) {
           if (burndown) {
             burndown.setData(data);
+            console.log(data);
           }
         }
       }).run();
@@ -13793,6 +13796,7 @@ $__System.register('1', ['12', '1d', '2f'], function (_export) {
 
         if (!burndown) {
           burndown = new Burndown(gh_data_model.data);
+          console.log(gh_data_model.data);
         }
       });
     }

@@ -48,8 +48,10 @@ export class Burndown {
 
   getMaxTick () {
     let tickSize  = this.__data.yAxisData.tickSize;
+    let estimate  = this.__data.timelineData.maxValues.estimate;
     let timeSpent = this.__data.timelineData.maxValues.timeSpent;
-    let timeRange = Math.ceil(timeSpent / tickSize) * tickSize;
+    let maxValue  = Math.max(estimate, timeSpent);
+    let timeRange = Math.ceil(maxValue / tickSize) * tickSize;
 
     return timeRange / 3600;
   }

@@ -10,6 +10,7 @@ let gh_data_model = new Detourer({
   callback: function(data) {
     if (burndown) {
       burndown.setData(data);
+      console.log(data);
     }
   }
 }).run();
@@ -22,6 +23,7 @@ chrome.runtime.onMessage.addListener(
 
     if (!burndown) {
       burndown = new Burndown(gh_data_model.data);
+      console.log(gh_data_model.data);
     }
   }
 );
