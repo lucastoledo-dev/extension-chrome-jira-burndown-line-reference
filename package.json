@@ -1,0 +1,38 @@
+{
+  "name": "jira-burndown",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "bundle": "jspm bundle-sfx app/main.js app.js & jspm depcache app/main.js",
+    "bundle-min": "jspm bundle-sfx --minify app/main.js app.js & jspm depcache app/main.js",
+    "unbundle": "jspm unbundle",
+    "jspm": "jspm"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rafaelfbs/extension-chrome-jira-burndown-line-reference.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rafaelfbs/extension-chrome-jira-burndown-line-reference/issues"
+  },
+  "homepage": "https://github.com/rafaelfbs/extension-chrome-jira-burndown-line-reference#readme",
+  "jspm": {
+    "dependencies": {
+      "jquery": "npm:jquery@^2.2.0",
+      "less": "github:rafaelfbs/systemjs-less-plugin@^1.4.1",
+      "lodash": "npm:lodash@^4.5.0"
+    },
+    "devDependencies": {
+      "babel": "npm:babel-core@^5.8.24",
+      "babel-runtime": "npm:babel-runtime@^5.8.24",
+      "core-js": "npm:core-js@^1.1.4"
+    }
+  },
+  "devDependencies": {
+    "jspm": "^0.16.29",
+    "less": "^2.6.0"
+  }
+}
